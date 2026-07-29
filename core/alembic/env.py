@@ -1,7 +1,14 @@
+import os
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
+
+from core.database import Base
+
+from pathlib import Path
+from dotenv import load_dotenv
 
 from alembic import context
 
@@ -14,11 +21,27 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+#Define the path to the .env file(parent directory of FastAPI project)
+Base_Dir = Path(__file__).resolve().parent.parent #Move up one directory
+Env_Path = Base_Dir/".env"
+
+#Load environment variables from the .env file
+load_dotenv(Env_Path)
+#Get the database URL from environment variables
+DATABASE_URL = os.getenv("SQLAlCHEMY_DATABASE_URL")
+config = context.config
+#Override sqlalchemy.url in alembic config with DATABASE_URL
+if DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", DATABASE_URL)
+else:
+    raise ValueError("DATABASE_URL is not set in the environment variables")
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+from tasks.models import *
+
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
