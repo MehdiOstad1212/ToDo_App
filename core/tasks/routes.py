@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from tasks.schemas import TaskResponseSchema, TaskCreateSchema, TaskUpdateSchema
 from tasks.models import TaskModel
 from sqlalchemy.orm import Session
@@ -9,9 +9,18 @@ from fastapi.responses import JSONResponse
 router = APIRouter (tags = ["tasks"])
 
 @router.get("/tasks", response_model = List[TaskResponseSchema])
-async def retrieve_tasks_list(db: Session = Depends(get_db)):
-    result = db.query(TaskModel).all()
-    return result
+async def retrieve_tasks_list(
+    completed: bool = Query(None, 
+                            description = "filter the tasks based on being completed or not"),
+    limit: int = Query(10, gt = 0, le = 50,
+                            description = "limiting the number of items to retrieve"),
+    offset: int = Query(0, ge = 0,
+                            description = "for paginating based on passed items"), 
+    db: Session = Depends(get_db)):
+    query = db.query(TaskModel)
+    if completed is not None:
+        query = query.filter_by(is_completed = completed)
+    return query.limit(limit).offset(offset).all()
 
 @router.post("/tasks")
 async def create_task(request: TaskCreateSchema, db: Session = Depends(get_db)):
