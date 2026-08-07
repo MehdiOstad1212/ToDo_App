@@ -37,13 +37,15 @@ app.include_router(tasks_routes)
 app.include_router(users_routes)
 
 
-from auth.basic_auth import get_authenticated_user
+from fastapi.security import APIKeyHeader
+
+header_schema = APIKeyHeader(name = "x-key")
 
 @app.get("/public")
 def public_route():
     return {"message": "This is a public route."}
 
 @app.get("/private")
-def private_route(user: UserModel = Depends(get_authenticated_user)):
-    print(user)
+def private_route(api_key = Depends(header_schema)):
+    print(api_key)
     return {"message": "This is a private route."}
