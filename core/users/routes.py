@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Path
 from fastapi.responses import JSONResponse
 from users.schemas import *
 from users.models import UserModel, TokenModel
+from auth.jwt_auth import generate_access_token, generate_refresh_token
 from sqlalchemy.orm import Session
 from core.database import get_db
 import secrets
@@ -20,11 +21,15 @@ async def user_login(request: TaskLoginSchema, db: Session = Depends(get_db)):
     if not user_obj.verify_password(request.password):
          raise HTTPException(status_code = status.HTTP_400_BAD_REQUEST, 
                                      detail = "password is invalid")
-    token_obj = TokenModel(user_id = user_obj.id, token = generate_token())
+    '''token_obj = TokenModel(user_id = user_obj.id, token = generate_token())
     db.add(token_obj)
     db.commit()
-    db.refresh(token_obj)
-    return JSONResponse(content = {"detail" : "logged in seccessfully","token": token_obj.token})
+    db.refresh(token_obj)'''
+    access_token = generate_access_token(user_obj.id)
+    refresh_token = generate_refresh_token(user_obj.id)
+    return JSONResponse(content = {"detail" : "logged in seccessfully", 
+                                   "access_token": access_token,
+                                   "refresh_token": refresh_token})
 
 @router.post("/register")
 async def user_register(request: TaskRegisterSchema, db: Session = Depends(get_db)):
