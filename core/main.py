@@ -37,7 +37,7 @@ app.include_router(tasks_routes)
 app.include_router(users_routes)
 
 
-from auth.token_auth import get_authenticated_user
+from auth.jwt_auth import get_authenticated_user
 
 @app.get("/public")
 def public_route():
