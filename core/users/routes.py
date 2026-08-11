@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Path
 from fastapi.responses import JSONResponse
 from users.schemas import *
-from users.models import UserModel, TokenModel
-from auth.jwt_auth import generate_access_token, generate_refresh_token
+from users.models import UserModel
+from auth.jwt_auth import generate_access_token, generate_refresh_token, decode_refresh_token
 from sqlalchemy.orm import Session
 from core.database import get_db
 import secrets
@@ -41,3 +41,9 @@ async def user_register(request: TaskRegisterSchema, db: Session = Depends(get_d
     db.add(user_obj)
     db.commit()
     return JSONResponse(content = {"detail" : "user registered seccessfully"})
+
+@router.post("/refresh-token")
+async def user_refresh_token(request: UserRefreshTokenSchema):
+     user_id = decode_refresh_token(request.refresh_token)
+     access_token = generate_access_token(user_id)
+     return JSONResponse(content = {"access_token" : access_token})

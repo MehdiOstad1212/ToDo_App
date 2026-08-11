@@ -18,3 +18,6 @@ class TaskRegisterSchema(BaseModel):
             raise HTTPException(status_code = status.HTTP_409_CONFLICT, 
                                             detail = "passwords are not match")
         return password_confirm
+
+class UserRefreshTokenSchema(BaseModel):
+    refresh_token: str = Field(..., description = "refresh token of the user")

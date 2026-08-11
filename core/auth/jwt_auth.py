@@ -40,6 +40,33 @@ def get_authenticated_user(credentials:HTTPAuthorizationCredentials = Depends(se
                             detail = f"Authentication failed, {e}")
     return user_obj
 
+def decode_refresh_token(token):
+    try:
+        decoded = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms = "HS256")
+        user_id = decoded.get("user_id", None)
+        if not user_id:
+            raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
+                                        detail = "Authentication failed, " \
+                                        "user_id is not in the payload")
+        if decoded.get("type") != "refresh":
+            raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
+                                        detail = "Authentication failed, " \
+                                        "token type is not valid")
+        if datetime.fromtimestamp(decoded.get("exp"))<datetime.utcnow():
+            raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
+                                        detail = "Authentication failed, " \
+                                        "token expired")
+    except InvalidSignatureError:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
+                            detail = "Authentication failed, invalid signiture")
+    except DecodeError:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
+                            detail = "Authentication failed, decode failed")
+    except Exception as e:
+        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
+                            detail = f"Authentication failed, {e}")
+    return user_id
+
 def generate_access_token(user_id: int, expires_in: int = 60*5) -> str:
     now = datetime.utcnow()
     payload = {
