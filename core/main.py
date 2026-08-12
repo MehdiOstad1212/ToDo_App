@@ -1,8 +1,9 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request, Response
 from contextlib import asynccontextmanager
 from tasks.routes import router as tasks_routes
 from users.routes import router as users_routes
 from users.models import UserModel
+from datetime import datetime, timedelta
 
 tags_metadata = [
     {"name": "tasks",
@@ -47,3 +48,21 @@ def public_route():
 def private_route(user = Depends(get_authenticated_user)):
     print(user.user_name)
     return {"message": "This is a private route."}
+
+
+@app.get("/set-cookie")
+def set_cookie(response : Response):
+    expires = datetime.utcnow() + timedelta(days=7)
+    response.set_cookie(key = "test", value = "something",
+                        httponly=True, secure=True, samesite="Lax")
+    return {"message" : "Cookie has been set successfully"}
+
+@app.get("/get-cookie")
+def get_cookie(request : Request):
+    print(request.cookies.get("test"))
+    return {"message" : "Cookie has been requested and sent successfully"}
+
+@app.delete("/delete-cookie")
+def delete_cookie(response : Response):
+    response.delete_cookie(key = "test")
+    return {"message" : "Cookie has been removed!"}
