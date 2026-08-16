@@ -2,22 +2,30 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
-class TaskBaseSchema (BaseModel):
-    title: str = Field(..., max_length = 150,
-                       min_length = 3, description = "Title of the task")
-    description: Optional[str] = Field(None, max_length = 500,
-                                       description = "Description of the task")
-    is_completed: bool = Field(..., description = "State of the task")
 
-class TaskCreateSchema (TaskBaseSchema):
+class TaskBaseSchema(BaseModel):
+    title: str = Field(
+        ..., max_length=150, min_length=3, description="Title of the task"
+    )
+    description: Optional[str] = Field(
+        None, max_length=500, description="Description of the task"
+    )
+    is_completed: bool = Field(..., description="State of the task")
+
+
+class TaskCreateSchema(TaskBaseSchema):
     pass
 
-class TaskUpdateSchema (TaskBaseSchema):
+
+class TaskUpdateSchema(TaskBaseSchema):
     pass
 
-class TaskResponseSchema (TaskBaseSchema):
-    id: int = Field(..., description = "Unique identifier of the task")
-    created_at: datetime = Field(..., description = 
-                                 "Creation date and time of the object")
-    updated_at: datetime = Field(..., description = 
-                                 "updating date and time of the object")
+
+class TaskResponseSchema(TaskBaseSchema):
+    id: int = Field(..., description="Unique identifier of the task")
+    created_at: datetime = Field(
+        ..., description="Creation date and time of the object"
+    )
+    updated_at: datetime = Field(
+        ..., description="updating date and time of the object"
+    )

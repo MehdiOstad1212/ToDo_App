@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, func, ForeignKey
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    Boolean,
+    DateTime,
+    func,
+    ForeignKey,
+)
 from core.database import Base
 from sqlalchemy.orm import relationship
 from passlib.context import CryptContext
@@ -6,34 +15,37 @@ import datetime
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-class UserModel (Base):
+
+class UserModel(Base):
     __tablename__ = "users"
-    id = Column(Integer, primary_key = True, autoincrement = True)
-    user_name = Column(String(250), nullable = False)
-    password = Column(String, nullable = False)
-    is_active = Column(Boolean, default = True)
-    created_at = Column(DateTime(), server_default = func.now())
-    updated_at = Column(DateTime(), server_default = func.now(),
-                        server_onupdate = func.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_name = Column(String(250), nullable=False)
+    password = Column(String, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(), server_default=func.now())
+    updated_at = Column(
+        DateTime(), server_default=func.now(), server_onupdate=func.now()
+    )
 
-    tasks = relationship("TaskModel", back_populates = "user")
-
+    tasks = relationship("TaskModel", back_populates="user")
 
     def hash_password(self, plain_password: str) -> str:
         """Hashes the given password using bcrypt."""
         return pwd_context.hash(plain_password)
+
     def verify_password(self, plain_password: str) -> bool:
         """Verifies the given password against the stored hash."""
         return pwd_context.verify(plain_password, self.password)
+
     def set_password(self, plain_text: str) -> None:
         self.password = self.hash_password(plain_text)
 
 
 class TokenModel(Base):
     __tablename__ = "tokens"
-    id = Column(Integer, primary_key = True, autoincrement = True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    token = Column(String, nullable = False, unique = True)
-    created_at = Column(DateTime(), server_default = func.now())
+    token = Column(String, nullable=False, unique=True)
+    created_at = Column(DateTime(), server_default=func.now())
 
-    user = relationship("UserModel", uselist = False)
+    user = relationship("UserModel", uselist=False)

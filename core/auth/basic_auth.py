@@ -6,15 +6,26 @@ from sqlalchemy.orm import Session
 
 security = HTTPBasic()
 
-def get_authenticated_user(credentials:HTTPBasicCredentials = Depends(security),
-                           db: Session = Depends(get_db)):
-    user_obj = db.query(UserModel).filter_by(user_name = credentials.username.lower()).one_or_none()
+
+def get_authenticated_user(
+    credentials: HTTPBasicCredentials = Depends(security),
+    db: Session = Depends(get_db),
+):
+    user_obj = (
+        db.query(UserModel)
+        .filter_by(user_name=credentials.username.lower())
+        .one_or_none()
+    )
     if not user_obj:
-        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
-                            detail = "Incorrect username or password",
-                            headers = {"www_Authenticate":"Basic"})
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"www_Authenticate": "Basic"},
+        )
     if not user_obj.verify_password(credentials.password):
-        raise HTTPException(status_code = status.HTTP_401_UNAUTHORIZED, 
-                            detail = "Incorrect username or password",
-                            headers = {"www_Authenticate":"Basic"})
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"www_Authenticate": "Basic"},
+        )
     return user_obj
