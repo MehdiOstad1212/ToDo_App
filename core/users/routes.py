@@ -27,13 +27,13 @@ async def user_login(request: TaskLoginSchema, db: Session = Depends(get_db)):
     )
     if not user_obj:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="user does not exist",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid username or password",
         )
     if not user_obj.verify_password(request.password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="password is invalid",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid username or password",
         )
     """token_obj = TokenModel(user_id = user_obj.id, token = generate_token())
     db.add(token_obj)
@@ -67,7 +67,8 @@ async def user_register(
     user_obj.set_password(request.password)
     db.add(user_obj)
     db.commit()
-    return JSONResponse(content={"detail": "user registered seccessfully"})
+    return JSONResponse(status_code = status.HTTP_201_CREATED,
+                        content={"detail": "user registered seccessfully"})
 
 
 @router.post("/refresh-token")
