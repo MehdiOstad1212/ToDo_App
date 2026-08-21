@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, Request, Response, status
+from fastapi import FastAPI, Depends, Request, Response, status, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -9,6 +9,7 @@ from users.models import UserModel
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 import time
+import random
 
 tags_metadata = [
     {
@@ -127,3 +128,18 @@ async def http_validation_exception_handler(request, exc):
     }
     return JSONResponse(status_code = status.HTTP_422_UNPROCESSABLE_CONTENT, 
                         content = error_response)
+
+task_counter = 1
+
+def start_task(task_id):
+    print("start the task")
+    print(f"doing the process: {task_id}")
+    time.sleep(random.randint(5,25))
+    print(f"finished the task: {task_id}")
+
+@app.get("/initiate-task", status_code = 200)
+async def initiate_task(background_tasks: BackgroundTasks):
+    global task_counter
+    background_tasks.add_task(start_task, task_id = task_counter)
+    task_counter += 1
+    return JSONResponse({"detail": "task is done"})
