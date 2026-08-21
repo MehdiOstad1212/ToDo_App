@@ -97,7 +97,7 @@ def decode_refresh_token(token):
 
 
 def generate_access_token(user_id: int, expires_in: int = 60 * 5) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     payload = {
         "type": "access",
         "user_id": user_id,
@@ -108,7 +108,7 @@ def generate_access_token(user_id: int, expires_in: int = 60 * 5) -> str:
 
 
 def generate_refresh_token(user_id: int, expires_in: int = 3600 * 2) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.utcnow()
     payload = {
         "type": "refresh",
         "user_id": user_id,
