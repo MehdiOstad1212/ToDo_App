@@ -8,8 +8,16 @@ from users.routes import router as users_routes
 from users.models import UserModel
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 import time
 import random
+
+scheduler = AsyncIOScheduler()
+
+def my_tast():
+    print(f"Task executed at: {time.strftime("%Y-%m-%d %H:%M:%S")}")
+
 
 tags_metadata = [
     {
@@ -26,8 +34,11 @@ tags_metadata = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application Start Up")
+    scheduler.add_job(my_tast, IntervalTrigger(seconds = 10))
+    scheduler.start()
     yield
     print("Application Shut Down")
+    scheduler.shutdown()
 
 
 app = FastAPI(

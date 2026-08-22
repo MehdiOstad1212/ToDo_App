@@ -7,3 +7,4 @@ faker
 flake8
 black
 pytest
+apscheduler
