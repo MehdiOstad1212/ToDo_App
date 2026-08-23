@@ -12,6 +12,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 import time
 import random
+import httpx
 
 scheduler = AsyncIOScheduler()
 
@@ -34,7 +35,7 @@ tags_metadata = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application Start Up")
-    scheduler.add_job(my_tast, IntervalTrigger(seconds = 10))
+    scheduler.add_job(my_tast, IntervalTrigger(seconds = 1000))
     scheduler.start()
     yield
     print("Application Shut Down")
@@ -154,3 +155,42 @@ async def initiate_task(background_tasks: BackgroundTasks):
     background_tasks.add_task(start_task, task_id = task_counter)
     task_counter += 1
     return JSONResponse({"detail": "task is done"})
+
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+from fastapi_cache.decorator import cache
+
+cache_backend = InMemoryBackend()
+FastAPICache.init(cache_backend)
+
+async def request_current_weather (latitude: float, longitude: float):
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "current": "temperature_2m,relative_humidity_2m"
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, params = params)
+    if response.status_code == 200:
+        data = response.json()
+        current_weather = data.get("current", {})
+        return current_weather
+    else:
+        return None
+
+@app.get("/fetch-weather", status_code = 200)
+#@cache(expire = 10)
+async def fetch_current_weather(latitude: float = 40.7128,
+                                longitude: float = -74.0060):
+    catch_key = f"weather-{latitude}-{longitude}"
+    catched_data = await cache_backend.get(catch_key)
+    if catched_data:
+            return JSONResponse(content = {"current_weather": catched_data})
+    current_weather = await request_current_weather(latitude, longitude)
+    if current_weather:
+        await cache_backend.set(catch_key, current_weather, 10)
+        return JSONResponse(content = {"current_weather": current_weather})
+    else:
+        return JSONResponse(content = {"detail": "Failed to fetch weather"},
+                            status_code = 500)
