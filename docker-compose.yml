@@ -21,6 +21,18 @@ services:
     ports:
       - "5433:5432"
 
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
   backend:
     build:
       context: .
@@ -30,10 +42,12 @@ services:
 
     depends_on:
       - db
+      - redis
     
     environment:
       SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
       JWT_SECRET_KEY: 271==4&c&#2m8a)ok#6l1r5ig&@!senzb(r*tdydc%f5iu@e8g
+      REDIS_URL: redis://redis:6379
 
     ports:
       - "8000:8000"

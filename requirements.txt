@@ -8,5 +8,5 @@ flake8
 black
 pytest
 apscheduler
-fastapi-cache2
+fastapi-cache2[redis]
 psycopg2-binary
