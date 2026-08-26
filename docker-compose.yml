@@ -18,6 +18,8 @@ services:
       retries: 5
       start_period: 30s
       timeout: 10s
+    ports:
+      - "5433:5432"
 
   backend:
     build:
@@ -28,6 +30,10 @@ services:
 
     depends_on:
       - db
+    
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      JWT_SECRET_KEY: 271==4&c&#2m8a)ok#6l1r5ig&@!senzb(r*tdydc%f5iu@e8g
 
     ports:
       - "8000:8000"

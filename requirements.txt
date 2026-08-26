@@ -9,3 +9,4 @@ black
 pytest
 apscheduler
 fastapi-cache2
+psycopg2-binary

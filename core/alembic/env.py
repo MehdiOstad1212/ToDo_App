@@ -26,9 +26,12 @@ Base_Dir = Path(__file__).resolve().parent.parent #Move up one directory
 Env_Path = Base_Dir/".env"
 
 #Load environment variables from the .env file
-load_dotenv(Env_Path)
+if Env_Path.exists():
+    load_dotenv(Env_Path)
+else:
+    print(f"Warning: .env file not found. Falling back to global environment")
 #Get the database URL from environment variables
-DATABASE_URL = os.getenv("SQLAlCHEMY_DATABASE_URL")
+DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
 config = context.config
 #Override sqlalchemy.url in alembic config with DATABASE_URL
 if DATABASE_URL:
@@ -67,7 +70,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
-        render_as_batch = True,
+        # render_as_batch = True,
     )
 
     with context.begin_transaction():
@@ -89,7 +92,8 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata, render_as_batch = True,
+            connection=connection, target_metadata=target_metadata,
+            # render_as_batch = True,
         )
 
         with context.begin_transaction():
