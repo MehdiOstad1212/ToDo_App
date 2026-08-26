@@ -10,15 +10,29 @@ from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.jobstores.redis import RedisJobStore
 from core.config import settings
 import time
 import random
 import httpx
+import logging
 
-scheduler = AsyncIOScheduler()
+# initialize redis jobstore for APScheduler
+jobstores = {"default": RedisJobStore(jobs_key = "apscheduler.jobs",
+                                      run_times_key = "apscheduler.run_times",
+                                      host = "redis",
+                                      port = 6379,
+                                      db = 1)}
+
+scheduler = AsyncIOScheduler(jobstores = jobstores)
+
+logging.basicConfig(level = logging.INFO,
+                    format = "%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 def my_tast():
-    print(f"Task executed at: {time.strftime("%Y-%m-%d %H:%M:%S")}")
+    logger.info(f"Task executed at: {time.strftime("%Y-%m-%d %H:%M:%S")}")
+    #print(f"Task executed at: {time.strftime("%Y-%m-%d %H:%M:%S")}")
 
 
 tags_metadata = [
@@ -36,7 +50,9 @@ tags_metadata = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print("Application Start Up")
-    scheduler.add_job(my_tast, IntervalTrigger(seconds = 1000))
+    scheduler.add_job(my_tast, IntervalTrigger(seconds = 1500),
+                      id = "my_task",
+                      replace_existing = True)
     scheduler.start()
     yield
     print("Application Shut Down")
