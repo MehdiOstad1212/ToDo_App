@@ -174,6 +174,19 @@ async def initiate_task(background_tasks: BackgroundTasks):
     task_counter += 1
     return JSONResponse({"detail": "task is done"})
 
+from core.celery_conf import add_number
+from celery.result import AsyncResult
+
+@app.get("/initiate-celery-task", status_code = 200)
+async def initiate_celery_task():
+    return JSONResponse({"detail": add_number.delay(1,2).id})
+
+@app.get("/check-celery-task-result", status_code = 200)
+async def check_celery_task_result(task_id: str):
+    result = AsyncResult(task_id).ready()
+    return JSONResponse({"result": result})
+
+
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache

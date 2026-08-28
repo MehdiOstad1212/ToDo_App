@@ -71,5 +71,26 @@ services:
     volumes:
       - ./core:/usr/src/core
 
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+
+    container_name: celery_worker
+
+    depends_on:
+      - db
+      - redis
+    
+    environment:
+      SQLALCHEMY_DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+      JWT_SECRET_KEY: 271==4&c&#2m8a)ok#6l1r5ig&@!senzb(r*tdydc%f5iu@e8g
+      REDIS_URL: redis://redis:6379
+
+    command: bash -c "celery -A core.celery_conf worker --loglevel=info"
+
+    volumes:
+      - ./core:/usr/src/core
+
 volumes:
   smtp4dev-data:
