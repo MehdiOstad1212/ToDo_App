@@ -23,6 +23,14 @@ import random
 import httpx
 import logging
 
+import sentry_sdk
+
+sentry_sdk.init(
+    dsn = settings.SENTRY_DSN,
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii = True,
+)
 
 # Redis configuration
 redis_url = urlparse(settings.REDIS_URL)
@@ -241,3 +249,7 @@ async def test_send_email():
                      recipients = ["recipient@example.com"],
                      body = "This is a test email sent using the email_util function")
     return JSONResponse(content = {"detail": "Email has been sent"})
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
