@@ -188,6 +188,10 @@ async def initiate_task(background_tasks: BackgroundTasks):
     task_counter += 1
     return JSONResponse({"detail": "task is done"})
 
+@app.get("/is-ready", status_code = 200)
+async def readiness():
+    return JSONResponse(content = "ok")
+
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
