@@ -8,24 +8,38 @@ from users.routes import router as users_routes
 from users.models import UserModel
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.jobstores.redis import RedisJobStore
+
 from core.config import settings
 from core.email_util import send_email
+
+from urllib.parse import urlparse
+
 import time
 import random
 import httpx
 import logging
 
-# initialize redis jobstore for APScheduler
-jobstores = {"default": RedisJobStore(jobs_key = "apscheduler.jobs",
-                                      run_times_key = "apscheduler.run_times",
-                                      host = "redis",
-                                      port = 6379,
-                                      db = 1)}
 
-scheduler = AsyncIOScheduler(jobstores = jobstores)
+# Redis configuration
+redis_url = urlparse(settings.REDIS_URL)
+
+# APScheduler Redis JobStore
+jobstores = {
+    "default": RedisJobStore(
+        jobs_key="apscheduler.jobs",
+        run_times_key="apscheduler.run_times",
+        host=redis_url.hostname,
+        port=redis_url.port or 6379,
+        password=redis_url.password,
+        db=1,
+    )
+}
+
+scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 logging.basicConfig(level = logging.INFO,
                     format = "%(asctime)s - %(levelname)s - %(message)s")
