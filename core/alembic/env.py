@@ -31,7 +31,7 @@ if Env_Path.exists():
 else:
     print(f"Warning: .env file not found. Falling back to global environment")
 #Get the database URL from environment variables
-DATABASE_URL = os.getenv("SQLALCHEMY_DATABASE_URL")
+DATABASE_URL = os.getenv("SQLAlCHEMY_DATABASE_URL")
 config = context.config
 #Override sqlalchemy.url in alembic config with DATABASE_URL
 if DATABASE_URL:

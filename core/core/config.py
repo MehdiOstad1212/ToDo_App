@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     JWT_SECRET_KEY: str = "test"
     model_config = SettingsConfigDict(env_file=".env")
 
+    SENTRY_DSN:str = "https://75b071b6160b780fac49f1bde10183d3@sentry.hamravesh.com/10409"
+
     REDIS_URL: str
 
     MAIL_USERNAME: str = ""

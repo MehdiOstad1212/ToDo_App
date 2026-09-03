@@ -8,24 +8,46 @@ from users.routes import router as users_routes
 from users.models import UserModel
 from datetime import datetime, timedelta
 from fastapi.middleware.cors import CORSMiddleware
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.jobstores.redis import RedisJobStore
+
 from core.config import settings
 from core.email_util import send_email
+
+from urllib.parse import urlparse
+
 import time
 import random
 import httpx
 import logging
 
-# initialize redis jobstore for APScheduler
-jobstores = {"default": RedisJobStore(jobs_key = "apscheduler.jobs",
-                                      run_times_key = "apscheduler.run_times",
-                                      host = "redis",
-                                      port = 6379,
-                                      db = 1)}
+import sentry_sdk
 
-scheduler = AsyncIOScheduler(jobstores = jobstores)
+sentry_sdk.init(
+    dsn = settings.SENTRY_DSN,
+    # Add data like request headers and IP for users,
+    # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+    send_default_pii = True,
+)
+
+# Redis configuration
+redis_url = urlparse(settings.REDIS_URL)
+
+# APScheduler Redis JobStore
+jobstores = {
+    "default": RedisJobStore(
+        jobs_key="apscheduler.jobs",
+        run_times_key="apscheduler.run_times",
+        host=redis_url.hostname,
+        port=redis_url.port or 6379,
+        password=redis_url.password,
+        db=1,
+    )
+}
+
+scheduler = AsyncIOScheduler(jobstores=jobstores)
 
 logging.basicConfig(level = logging.INFO,
                     format = "%(asctime)s - %(levelname)s - %(message)s")
@@ -174,6 +196,10 @@ async def initiate_task(background_tasks: BackgroundTasks):
     task_counter += 1
     return JSONResponse({"detail": "task is done"})
 
+@app.get("/is-ready", status_code = 200)
+async def readiness():
+    return JSONResponse(content = "ok")
+
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_cache.decorator import cache
@@ -223,3 +249,7 @@ async def test_send_email():
                      recipients = ["recipient@example.com"],
                      body = "This is a test email sent using the email_util function")
     return JSONResponse(content = {"detail": "Email has been sent"})
+
+@app.get("/sentry-debug")
+async def trigger_error():
+    division_by_zero = 1 / 0
